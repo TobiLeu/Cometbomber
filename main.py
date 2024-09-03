@@ -98,7 +98,7 @@ class Stone:
 # Klasse Bombe
 class Bomb:
     def __init__(self, x, y):
-        self.rect = pygame.Rect(x+5, y+5, PLAYER_SIZE, PLAYER_SIZE)
+        self.rect = pygame.Rect(x + 5, y + 5, PLAYER_SIZE, PLAYER_SIZE)
         self.time_placed = pygame.time.get_ticks()
         self.exploded = False
 
@@ -109,10 +109,6 @@ class Bomb:
         current_time = pygame.time.get_ticks()
         if current_time - self.time_placed >= BOMB_TIME:
             self.exploded = True
-
-    def explode(self):
-        # Hier wird keine Verzögerung verwendet, Explosion sofort rendern
-        pass
 
 # Liste von Hindernissen erstellen aus Liste GRANIT_POSITIONS
 granits = []
@@ -127,6 +123,17 @@ for i in range(len(STONE_POSITIONS)):
 # Liste von Bomben
 bombs = []
 
+# Funktion zur Überprüfung der Kollision mit bestehenden Bomben und Hindernissen
+def can_place_bomb(x, y, bombs, hindernisse):
+    test_rect = pygame.Rect(x + 5, y + 5, PLAYER_SIZE, PLAYER_SIZE)
+    for bomb in bombs:
+        if test_rect.colliderect(bomb.rect):
+            return False
+    for hindernis in hindernisse:
+        if test_rect.colliderect(hindernis.rect):
+            return False
+    return True
+
 # Hauptspiel-Schleife
 running = True
 while running:
@@ -138,7 +145,8 @@ while running:
         if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
             bomb_x = (player.rect.x // TILE_SIZE) * TILE_SIZE
             bomb_y = (player.rect.y // TILE_SIZE) * TILE_SIZE
-            bombs.append(Bomb(bomb_x, bomb_y))
+            if can_place_bomb(bomb_x, bomb_y, bombs, granits + stones):
+                bombs.append(Bomb(bomb_x, bomb_y))
 
 
 
@@ -170,7 +178,7 @@ while running:
     for bomb in bombs:
         bomb.update()
         if bomb.exploded:
-            pygame.draw.rect(screen, WHITE, bomb.rect)  # Explosion visuell darstellen
+            pygame.draw.rect(screen, RED, bomb.rect)  # Explosion visuell darstellen
         else:
             bomb.draw(screen)
 
