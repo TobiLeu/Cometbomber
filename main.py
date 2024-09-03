@@ -157,15 +157,6 @@ def can_place_bomb(x, y, bombs, hindernisse):
             return False
     return True
 
-def erase_Stones( bombs, stones):
-    test_rect = pygame.Rect(x + 5, y + 5, PLAYER_SIZE, PLAYER_SIZE)
-    for bomb in bombs:
-        if test_rect.colliderect(bomb.rect):
-            return False
-    for hindernis in hindernisse:
-        if test_rect.colliderect(hindernis.rect):
-            return False
-    return True
 
 # Hauptspiel-Schleife
 running = True
