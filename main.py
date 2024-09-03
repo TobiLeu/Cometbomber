@@ -95,6 +95,25 @@ class Stone:
     def draw(self, screen):
         pygame.draw.rect(screen, GREEN, self.rect)
 
+# Klasse Bombe
+class Bomb:
+    def __init__(self, x, y):
+        self.rect = pygame.Rect(x+5, y+5, PLAYER_SIZE, PLAYER_SIZE)
+        self.time_placed = pygame.time.get_ticks()
+        self.exploded = False
+
+    def draw(self, screen):
+        pygame.draw.rect(screen, WHITE, self.rect)
+
+    def update(self):
+        current_time = pygame.time.get_ticks()
+        if current_time - self.time_placed >= BOMB_TIME:
+            self.exploded = True
+
+    def explode(self):
+        # Hier wird keine Verzögerung verwendet, Explosion sofort rendern
+        pass
+
 # Liste von Hindernissen erstellen aus Liste GRANIT_POSITIONS
 granits = []
 for i in range(len(GRANIT_POSITIONS)):
@@ -105,6 +124,8 @@ stones = []
 for i in range(len(STONE_POSITIONS)):
     stones.append(Stone(x_position(STONE_POSITIONS[i]), y_position(STONE_POSITIONS[i])))
 
+# Liste von Bomben
+bombs = []
 
 # Hauptspiel-Schleife
 running = True
@@ -113,6 +134,13 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        # Bombe platzieren bei Tastendruck SPACE
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+            bomb_x = (player.rect.x // TILE_SIZE) * TILE_SIZE
+            bomb_y = (player.rect.y // TILE_SIZE) * TILE_SIZE
+            bombs.append(Bomb(bomb_x, bomb_y))
+
+
 
     # Tasteneingaben abfragen
     keys = pygame.key.get_pressed()
@@ -137,6 +165,17 @@ while running:
     #Stones zeichnen
     for stone in stones:
         stone.draw(screen)
+
+    # Bomben aktualisieren und zeichnen
+    for bomb in bombs:
+        bomb.update()
+        if bomb.exploded:
+            pygame.draw.rect(screen, WHITE, bomb.rect)  # Explosion visuell darstellen
+        else:
+            bomb.draw(screen)
+
+    # Alle explodierten Bomben aus der Liste entfernen
+    bombs = [bomb for bomb in bombs if not bomb.exploded]
 
     # Bildschirm aktualisieren
     pygame.display.flip()
