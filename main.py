@@ -119,12 +119,14 @@ class Stone:
 # Klasse Bombe
 class Bomb:
     def __init__(self, x, y):
-        self.rect = pygame.Rect(x + 5, y + 5, PLAYER_SIZE, PLAYER_SIZE)
+        self.image = bomb_image
+        self.rect = self.image.get_rect()
+        self.rect.topleft = (x + 5, y + 5)
         self.time_placed = pygame.time.get_ticks()
         self.exploded = False
 
     def draw(self, screen):
-        pygame.draw.rect(screen, WHITE, self.rect)
+        screen.blit(bomb.image, bomb.rect.topleft)
 
     def update(self):
         current_time = pygame.time.get_ticks()
@@ -146,6 +148,16 @@ bombs = []
 
 # Funktion zur Überprüfung der Kollision mit bestehenden Bomben und Hindernissen
 def can_place_bomb(x, y, bombs, hindernisse):
+    test_rect = pygame.Rect(x + 5, y + 5, PLAYER_SIZE, PLAYER_SIZE)
+    for bomb in bombs:
+        if test_rect.colliderect(bomb.rect):
+            return False
+    for hindernis in hindernisse:
+        if test_rect.colliderect(hindernis.rect):
+            return False
+    return True
+
+def erase_Stones( bombs, stones):
     test_rect = pygame.Rect(x + 5, y + 5, PLAYER_SIZE, PLAYER_SIZE)
     for bomb in bombs:
         if test_rect.colliderect(bomb.rect):
@@ -181,7 +193,7 @@ while running:
     # Spielerbewegung abfragen
     player.move(keys, granits + stones)
 
-    # Bildschirm mit schwarzer Farbe füllen
+    # Bildschirm mit Hintergrundfarbe füllen
     screen.fill(BACKGROUND)
 
     # Spieler zeichnen
