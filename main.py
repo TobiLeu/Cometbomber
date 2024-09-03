@@ -1,6 +1,4 @@
-#Dies ist ein Test, ob das Arbeiten über Github funktioniert.
 import pygame
-
 
 # Initialisiere Pygame
 pygame.init()
@@ -12,8 +10,8 @@ TILE_SIZE = 40
 PLAYER_SPEED = 5
 BOMB_TIME = 3000  # Zeit bis zur Explosion in Millisekunden
 EXPLOSION_DURATION = 500  # Dauer der Explosion in Millisekunden
-PLAYER_START_POSITION = 70 # Startposition des Spielers
-GRANIT_POSITIONS = [75,95,105,150,200,221,256,287] # Granit = nichtzerstörbares Hindernis
+PLAYER_START_POSITION = 70  # Startposition des Spielers
+GRANIT_POSITIONS = [75, 95, 105, 150, 200, 221, 256, 287]  # Granit = nicht zerstörbares Hindernis
 
 # Farben
 WHITE = (255, 255, 255)
@@ -29,18 +27,19 @@ pygame.display.set_caption("Cometbomber")
 # Spieluhr
 clock = pygame.time.Clock()
 
-#Funktionen Spielfeld in Rastereinteilung: x-Koordinate, y-Koordinate
+# Funktionen Spielfeld in Rastereinteilung: x-Koordinate, y-Koordinate
 def x_position(pos_number):
     if (pos_number % 30) == 0:
         x_coordinate = (pos_number % 30) * TILE_SIZE + SCREEN_WIDTH - TILE_SIZE
     else:
         x_coordinate = (pos_number % 30) * TILE_SIZE - TILE_SIZE
     return x_coordinate
+
 def y_position(pos_number):
     if (pos_number % 30) == 0:
         y_coordinate = (int(pos_number / 30)) * TILE_SIZE - TILE_SIZE
     else:
-        y_coordinate =  (int(pos_number / 30)) * TILE_SIZE
+        y_coordinate = (int(pos_number / 30)) * TILE_SIZE
     return y_coordinate
 
 # Spielerklasse definieren
@@ -53,15 +52,28 @@ class Player:
         self.speed = 5
 
     # Spielerbewegung innerhalb des Spielfeldes
-    def move(self, keys):
-        if keys[pygame.K_LEFT] and self.rect.x > 0:
-            self.rect.x -= self.speed
-        if keys[pygame.K_RIGHT] and self.rect.x < (SCREEN_WIDTH - TILE_SIZE):
-            self.rect.x += self.speed
-        if keys[pygame.K_UP] and self.rect.y > 0:
-            self.rect.y -= self.speed
-        if keys[pygame.K_DOWN] and self.rect.y < (SCREEN_HEIGHT - TILE_SIZE) :
-            self.rect.y += self.speed
+    def move(self, keys, granits):
+        new_rect = self.rect.copy()  # Erstelle eine Kopie des aktuellen Rects
+
+        # Bewegung vorbereiten
+        if keys[pygame.K_LEFT] and new_rect.x > 0:
+            new_rect.x -= self.speed
+        if keys[pygame.K_RIGHT] and new_rect.x < (SCREEN_WIDTH - TILE_SIZE):
+            new_rect.x += self.speed
+        if keys[pygame.K_UP] and new_rect.y > 0:
+            new_rect.y -= self.speed
+        if keys[pygame.K_DOWN] and new_rect.y < (SCREEN_HEIGHT - TILE_SIZE):
+            new_rect.y += self.speed
+
+        # Kollision überprüfen
+        if not self.check_collision(new_rect, granits):
+            self.rect = new_rect  # Bewegung ausführen, wenn keine Kollision vorliegt
+
+    def check_collision(self, rect, hindernisse):
+        for hindernis in hindernisse:
+            if rect.colliderect(hindernis.rect):
+                return True
+        return False
 
 # Spielerinstanz erstellen und auf Spielfeld positionieren
 player = Player(x_position(PLAYER_START_POSITION), y_position(PLAYER_START_POSITION))
@@ -77,9 +89,7 @@ class Granit:
 # Liste von Hindernissen erstellen aus Liste GRANIT_POSITIONS
 granits = []
 for i in range(len(GRANIT_POSITIONS)):
-    granits.append(Granit(x_position(GRANIT_POSITIONS[i]),y_position(GRANIT_POSITIONS[i])))
-
-
+    granits.append(Granit(x_position(GRANIT_POSITIONS[i]), y_position(GRANIT_POSITIONS[i])))
 
 # Hauptspiel-Schleife
 running = True
@@ -92,16 +102,16 @@ while running:
     # Tasteneingaben abfragen
     keys = pygame.key.get_pressed()
 
-    #Spiel beenden
+    # Spiel beenden
     if keys[pygame.K_ESCAPE]:  # Escape-Taste gedrückt
         running = False  # Spiel beenden
 
-    #Spielerbewegung abfragen
-    player.move(keys)
+    # Spielerbewegung abfragen
+    player.move(keys, granits)
 
     # Bildschirm mit schwarzer Farbe füllen
     screen.fill(BLACK)
-    
+
     # Spieler zeichnen
     screen.blit(player.image, player.rect.topleft)
 
@@ -116,4 +126,3 @@ while running:
     clock.tick(60)
 
 pygame.quit()
-
