@@ -47,6 +47,11 @@ GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 BACKGROUND = (244, 164, 96)
 
+# Schriftarten laden
+title_font = pygame.font.SysFont('Impact', 72)
+instruction_font = pygame.font.SysFont('Impact', 36)
+
+
 # Bildschirm einrichten
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Cometbomber")
@@ -262,6 +267,58 @@ def can_place_bomb(x, y, bombs, hindernisse):
             return False
     return True
 
+# Funktion, um Steine zu zerstören, wenn sie in der Nähe einer explodierten Bombe sind
+def check_bomb_explosion_effect(bombs, stones):
+    for bomb in bombs:
+        if bomb.exploded:
+            # Erzeuge eine Liste von Rects, die den Explosionseffekt darstellen (rechts, links, oben, unten der Bombe)
+            explosion_rects = [
+                pygame.Rect(bomb.rect.x + PLAYER_SIZE, bomb.rect.y, PLAYER_SIZE, PLAYER_SIZE),  # Rechts
+                pygame.Rect(bomb.rect.x - PLAYER_SIZE, bomb.rect.y, PLAYER_SIZE, PLAYER_SIZE),  # Links
+                pygame.Rect(bomb.rect.x, bomb.rect.y + PLAYER_SIZE, PLAYER_SIZE, PLAYER_SIZE),  # Unten
+                pygame.Rect(bomb.rect.x, bomb.rect.y - PLAYER_SIZE, PLAYER_SIZE, PLAYER_SIZE)   # Oben
+            ]
+
+            # Überprüfe auf Kollision mit Steinen und entferne die Steine
+            stones[:] = [stone for stone in stones if not any(explosion_rect.colliderect(stone.rect) for explosion_rect in explosion_rects)]
+
+# Startbildschirm-Funktion
+def show_start_screen():
+    screen.fill(BACKGROUND)
+
+    # Titeltext rendern
+    title_text = title_font.render("Cometbomber", True, BLACK)
+    title_rect = title_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 100))
+
+    # Anweisungstext rendern
+    instruction_text = instruction_font.render("Drücke LEERTASTE, um zu starten", True, BLACK)
+    instruction_rect = instruction_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50))
+
+    # Text auf dem Bildschirm zeichnen
+    screen.blit(title_text, title_rect)
+    screen.blit(instruction_text, instruction_rect)
+
+    pygame.display.flip()
+
+    # Warten auf die Eingabe des Spielers
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:  # Start des Spiels bei Drücken der Leertaste
+                    waiting = False
+        # Tasteneingaben abfragen
+        keys = pygame.key.get_pressed()
+
+        # Spiel beenden
+        if keys[pygame.K_ESCAPE]:  # Escape-Taste gedrückt
+            running = False  # Spiel beenden
+
+# Startbildschirm anzeigen
+show_start_screen()
 
 # Hauptspiel-Schleife
 running = True
@@ -314,6 +371,9 @@ while running:
             pygame.draw.rect(screen, RED, bomb.rect)  # Explosion visuell darstellen
         else:
             bomb.draw(screen)
+
+    # Überprüfe die Explosionseffekte der Bomben auf Steine
+    check_bomb_explosion_effect(bombs, stones)
 
     # Alle explodierten Bomben aus der Liste entfernen
     bombs = [bomb for bomb in bombs if not bomb.exploded]
