@@ -5,8 +5,9 @@ import random
 pygame.init()
 
 # Spielkonstanten
-SCREEN_WIDTH = 1160
-SCREEN_HEIGHT = 680
+SCREEN_HEIGHT = 720
+GAME_SCREEN_WIDTH = 1160
+GAME_SCREEN_HEIGHT = 680
 TILE_SIZE = 40
 PLAYER_SPEED = 5
 ENEMY_SPEED = 1
@@ -14,6 +15,7 @@ PLAYER_SIZE = 30
 BOMB_TIME = 3000  # Zeit bis zur Explosion in Millisekunden
 EXPLOSION_DURATION = 500  # Dauer der Explosion in Millisekunden
 PLAYER_START_POSITION = 1  # Startposition des Spielers
+PLAYER_BOMB_MAXIMUM = 3
 GRANIT_POSITIONS = [32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58,
                     92, 94, 96, 98, 100, 102, 104, 106, 108, 110, 112, 114, 116, 118,
                     152, 154, 156, 158, 160, 162, 164, 166, 168, 170, 172, 174, 176, 178,
@@ -36,6 +38,8 @@ STONE_POSITIONS = [33, 35, 37, 39, 41, 43, 45, 47, 49, 51, 53, 55, 57, 62, 64, 6
                   # 388, 393, 395, 397, 399, 401, 403, 405, 407, 409, 411, 413, 415, 417,
                   # 422, 424, 426, 428, 430, 432, 434, 436, 438, 440, 442, 444, 446, 448,
                    453, 455, 457, 459, 461, 463, 465, 467, 469, 471, 473, 475, 477] # Stone = zerstörbares Hindernis
+SCORE_VALUE_STONE = 10
+PLAYER_SCORE = 0
 ENEMY_POSITIONS = [80,205]
 ENEMY_DIRECTION_CHANGE_INTERVAL = 2000  # Zeit in Millisekunden
 
@@ -45,6 +49,7 @@ BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
+GRAY = (90, 90, 90)
 BACKGROUND = (244, 164, 96)
 
 # Schriftarten laden
@@ -53,7 +58,7 @@ instruction_font = pygame.font.SysFont('Impact', 36)
 
 
 # Bildschirm einrichten
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+screen = pygame.display.set_mode((GAME_SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Cometbomber")
 
 # Spieluhr
@@ -62,7 +67,7 @@ clock = pygame.time.Clock()
 # Funktionen Spielfeld in Rastereinteilung: x-Koordinate, y-Koordinate
 def player_x_position(pos_number):
     if (pos_number % 30) == 0:
-        x_coordinate = (pos_number % 30) * TILE_SIZE + SCREEN_WIDTH - TILE_SIZE
+        x_coordinate = (pos_number % 30) * TILE_SIZE + GAME_SCREEN_WIDTH - TILE_SIZE
     else:
         x_coordinate = (pos_number % 30) * TILE_SIZE - TILE_SIZE
     return x_coordinate
@@ -74,7 +79,7 @@ def player_y_position(pos_number):
     return y_coordinate
 def x_position(pos_number):
     if (pos_number % 30) == 0:
-        x_coordinate = (pos_number % 30) * TILE_SIZE + SCREEN_WIDTH - TILE_SIZE
+        x_coordinate = (pos_number % 30) * TILE_SIZE + GAME_SCREEN_WIDTH - TILE_SIZE
     else:
         x_coordinate = (pos_number % 30) * TILE_SIZE - TILE_SIZE
     return x_coordinate
@@ -106,28 +111,37 @@ class Player:
         self.move_up = keys[pygame.K_UP] or keys[pygame.K_w]
         self.move_down = keys[pygame.K_DOWN] or keys[pygame.K_s]
 
-    # Spielerbewegung innerhalb des Spielfeldes
     def move(self, keys, hindernisse):
-        new_rect = self.rect.copy()  # Erstelle eine Kopie des aktuellen Rects
+        #original_rect = self.rect.copy()
 
-        # Bewegung vorbereiten
-        if (keys[pygame.K_LEFT] and new_rect.x > 0) or (keys[pygame.K_a] and new_rect.x > 0):
+        # Bewegung in jede Richtung separat überprüfen
+        if (keys[pygame.K_LEFT] or keys[pygame.K_a]):
+            new_rect = self.rect.copy()
             new_rect.x -= self.speed
-        if (keys[pygame.K_RIGHT] and new_rect.x < (SCREEN_WIDTH - TILE_SIZE)) or (keys[pygame.K_d] and new_rect.x < (SCREEN_WIDTH - TILE_SIZE)):
+            if not self.check_collision(new_rect, hindernisse):
+                self.rect = new_rect
+
+        if (keys[pygame.K_RIGHT] or keys[pygame.K_d]):
+            new_rect = self.rect.copy()
             new_rect.x += self.speed
-        if (keys[pygame.K_UP] and new_rect.y > 0) or (keys[pygame.K_w] and new_rect.y > 0):
+            if not self.check_collision(new_rect, hindernisse):
+                self.rect = new_rect
+
+        if (keys[pygame.K_UP] or keys[pygame.K_w]):
+            new_rect = self.rect.copy()
             new_rect.y -= self.speed
-        if (keys[pygame.K_DOWN] and new_rect.y < (SCREEN_HEIGHT - TILE_SIZE)) or (keys[pygame.K_s] and new_rect.y < (SCREEN_HEIGHT - TILE_SIZE)):
+            if not self.check_collision(new_rect, hindernisse):
+                self.rect = new_rect
+
+        if (keys[pygame.K_DOWN] or keys[pygame.K_s]):
+            new_rect = self.rect.copy()
             new_rect.y += self.speed
-
-        # Kollision überprüfen
-        if not self.check_collision(new_rect, hindernisse):
-            self.rect = new_rect  # Bewegung ausführen, wenn keine Kollision vorliegt
-
+            if not self.check_collision(new_rect, hindernisse):
+                self.rect = new_rect
 
     def check_collision(self, rect, hindernisse):
         for hindernis in hindernisse:
-            if rect.colliderect(hindernis.rect):
+            if rect.colliderect(hindernis.rect) or rect.x < 0 or rect.x > GAME_SCREEN_WIDTH - PLAYER_SIZE or rect.y < 0 or rect.y > GAME_SCREEN_HEIGHT - PLAYER_SIZE :
                 return True
         return False
 
@@ -164,8 +178,8 @@ class Enemy:
         if self.direction == 'RIGHT':
             new_rect.x += self.speed
             # Kollision mit dem rechten Rand
-            if new_rect.x > SCREEN_WIDTH - TILE_SIZE:
-                new_rect.x = SCREEN_WIDTH - TILE_SIZE
+            if new_rect.x > GAME_SCREEN_WIDTH - TILE_SIZE:
+                new_rect.x = GAME_SCREEN_WIDTH - TILE_SIZE
                 self.change_direction()
 
         if self.direction == 'UP':
@@ -178,8 +192,8 @@ class Enemy:
         if self.direction == 'DOWN':
             new_rect.y += self.speed
             # Kollision mit dem unteren Rand
-            if new_rect.y > SCREEN_HEIGHT - TILE_SIZE:
-                new_rect.y = SCREEN_HEIGHT - TILE_SIZE
+            if new_rect.y > GAME_SCREEN_HEIGHT - TILE_SIZE:
+                new_rect.y = GAME_SCREEN_HEIGHT - TILE_SIZE
                 self.change_direction()
 
         # Kollision prüfen und Richtung ändern, wenn eine Kollision vorliegt
@@ -250,11 +264,9 @@ for i in range(len(STONE_POSITIONS)):
 bombs = []
 
 # Liste von Gegnern
-#enemies = [Enemy(x_position(random.randint(1, 29)), y_position(random.randint(1, 17))) for _ in range(5)]
 enemies = []
 for i in range(len(ENEMY_POSITIONS)):
     enemies.append(Enemy(x_position(ENEMY_POSITIONS[i]), y_position(ENEMY_POSITIONS[i])))
-
 
 # Funktion zur Überprüfung der Kollision mit bestehenden Bomben und Hindernissen
 def can_place_bomb(x, y, bombs, hindernisse):
@@ -269,6 +281,7 @@ def can_place_bomb(x, y, bombs, hindernisse):
 
 # Funktion, um Steine zu zerstören, wenn sie in der Nähe einer explodierten Bombe sind
 def check_bomb_explosion_effect(bombs, stones):
+    global PLAYER_SCORE
     for bomb in bombs:
         if bomb.exploded:
             # Erzeuge eine Liste von Rects, die den Explosionseffekt darstellen (rechts, links, oben, unten der Bombe)
@@ -280,7 +293,9 @@ def check_bomb_explosion_effect(bombs, stones):
             ]
 
             # Überprüfe auf Kollision mit Steinen und entferne die Steine
-            stones[:] = [stone for stone in stones if not any(explosion_rect.colliderect(stone.rect) for explosion_rect in explosion_rects)]
+            destroyed_stones = [stone for stone in stones if any(explosion_rect.colliderect(stone.rect) for explosion_rect in explosion_rects)]
+            PLAYER_SCORE += len(destroyed_stones) * SCORE_VALUE_STONE  # Punkte basierend auf der Anzahl zerstörter Steine vergeben
+            stones[:] = [stone for stone in stones if stone not in destroyed_stones]
 
 # Startbildschirm-Funktion
 def show_start_screen():
@@ -288,11 +303,11 @@ def show_start_screen():
 
     # Titeltext rendern
     title_text = title_font.render("Cometbomber", True, BLACK)
-    title_rect = title_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 100))
+    title_rect = title_text.get_rect(center=(GAME_SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 100))
 
     # Anweisungstext rendern
     instruction_text = instruction_font.render("Drücke LEERTASTE, um zu starten", True, BLACK)
-    instruction_rect = instruction_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50))
+    instruction_rect = instruction_text.get_rect(center=(GAME_SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50))
 
     # Text auf dem Bildschirm zeichnen
     screen.blit(title_text, title_rect)
@@ -320,6 +335,9 @@ def show_start_screen():
 # Startbildschirm anzeigen
 show_start_screen()
 
+# Punktezähler Schriftart
+score_font = pygame.font.SysFont('Impact', 20)
+
 # Hauptspiel-Schleife
 running = True
 while running:
@@ -327,14 +345,13 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+
         # Bombe platzieren bei Tastendruck SPACE
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and len(bombs) <= PLAYER_BOMB_MAXIMUM - 1 :
             bomb_x = (player.rect.x // TILE_SIZE) * TILE_SIZE
             bomb_y = (player.rect.y // TILE_SIZE) * TILE_SIZE
             if can_place_bomb(bomb_x, bomb_y, bombs, granits + stones):
                 bombs.append(Bomb(bomb_x, bomb_y))
-
-
 
     # Tasteneingaben abfragen
     keys = pygame.key.get_pressed()
@@ -381,6 +398,13 @@ while running:
     # Gegner zeichnen
     for enemy in enemies:
         enemy.draw(screen)
+
+    # Infobar zeichnen
+    pygame.draw.rect(screen, GRAY, (0, 680, 1160, 40))
+
+    # Punkte anzeigen
+    score_text = score_font.render(f"Score: {PLAYER_SCORE}", True, WHITE)
+    screen.blit(score_text, (1050, 688))  # Punkte oben links anzeigen
 
     # Überprüfen, ob der Spieler mit einem Gegner kollidiert
     for enemy in enemies:
