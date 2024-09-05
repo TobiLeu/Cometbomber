@@ -17,7 +17,7 @@ PLAYER_SPEED = 3
 ENEMY_SPEED = 1
 PLAYER_SIZE = 30
 BOMB_TIME = 3000  # Zeit bis zur Explosion in Millisekunden
-EXPLOSION_DURATION = 1500  # Dauer der Explosion in Millisekunden
+EXPLOSION_DURATION = 1000  # Dauer der Explosion in Millisekunden
 PLAYER_START_POSITION = 1  # Startposition des Spielers
 PLAYER_BOMB_MAXIMUM = 3
 GRANIT_POSITIONS = [32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58,
@@ -601,6 +601,10 @@ while operational:
 
         for i in range(len(STONE_POSITIONS)):
             stones.append(Stone(x_position(STONE_POSITIONS[i]), y_position(STONE_POSITIONS[i])))
+
+        enemies = []
+        for i in range(len(ENEMY_POSITIONS)):
+            enemies.append(Enemy(x_position(ENEMY_POSITIONS[i]), y_position(ENEMY_POSITIONS[i])))
 
         # Spiel wieder starten
         running = True
