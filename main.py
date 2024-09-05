@@ -543,6 +543,7 @@ while operational:
 
         # Frame-Rate begrenzen (60 FPS)
         clock.tick(60)
+
     #GameOver Screen anzeigen und Variablen zurücksetzen
     while gameover:
         #Zeige Game Over Screen
@@ -551,8 +552,12 @@ while operational:
         # Variablen zurücksetzen, um das Spiel neu zu starten
         player = Player(player_x_position(PLAYER_START_POSITION), player_y_position(PLAYER_START_POSITION))
         bombs = []
+
         PLAYER_SCORE = 0
         start_time = pygame.time.get_ticks()
+
+        for i in range(len(STONE_POSITIONS)):
+            stones.append(Stone(x_position(STONE_POSITIONS[i]), y_position(STONE_POSITIONS[i])))
 
         # Spiel wieder starten
         running = True
@@ -567,6 +572,9 @@ while operational:
         bombs = []
         PLAYER_SCORE = 0
         start_time = pygame.time.get_ticks()
+
+        for i in range(len(STONE_POSITIONS)):
+            stones.append(Stone(x_position(STONE_POSITIONS[i]), y_position(STONE_POSITIONS[i])))
 
         # Spiel wieder starten
         running = True
