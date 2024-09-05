@@ -346,15 +346,20 @@ def show_game_over_screen():
 
     # Game-Over-Text rendern
     game_over_text = title_font.render("Game Over", True, RED)
-    game_over_rect = game_over_text.get_rect(center=(GAME_SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 50))
+    game_over_rect = game_over_text.get_rect(center=(GAME_SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 150))
 
     # Anweisungstext rendern
     instruction_text = instruction_font.render("Drücke R, um das Spiel neu zu starten", True, WHITE)
     instruction_rect = instruction_text.get_rect(center=(GAME_SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50))
 
+    # Score rendern
+    score_text = title_font.render(f'Score: {PLAYER_SCORE}', True, RED)
+    score_rect = score_text.get_rect(center=(GAME_SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 50))
+
     # Text auf dem Bildschirm zeichnen
     screen.blit(game_over_text, game_over_rect)
     screen.blit(instruction_text, instruction_rect)
+    screen.blit(score_text, score_rect)
 
     pygame.display.flip()
 
@@ -378,15 +383,20 @@ def show_winner_screen():
 
     # Winner Text rendern
     winner_text = title_font.render("Winner", True, RED)
-    winner_rect = winner_text.get_rect(center=(GAME_SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 50))
+    winner_rect = winner_text.get_rect(center=(GAME_SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 150))
 
     # Anweisungstext rendern
     instruction_text = instruction_font.render("Drücke R, um das Spiel neu zu starten", True, WHITE)
     instruction_rect = instruction_text.get_rect(center=(GAME_SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50))
 
+    # Score rendern
+    score_text = title_font.render(f'Score: {PLAYER_SCORE}', True, RED)
+    score_rect = score_text.get_rect(center=(GAME_SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 50))
+
     # Text auf dem Bildschirm zeichnen
     screen.blit(winner_text, winner_rect)
     screen.blit(instruction_text, instruction_rect)
+    screen.blit(score_text, score_rect)
 
     pygame.display.flip()
 
@@ -525,7 +535,8 @@ while operational:
 
         # Spiel beenden, wenn die Zeit abgelaufen ist
         if current_time - start_time >= GAME_DURATION:
-            break
+            running = False
+            gameover = True
 
         # Bildschirm aktualisieren
         pygame.display.flip()
@@ -560,9 +571,5 @@ while operational:
         # Spiel wieder starten
         running = True
         winner = False
-
-
-
-
 
 pygame.quit()
