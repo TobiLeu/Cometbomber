@@ -336,6 +336,34 @@ def show_start_screen():
         if keys[pygame.K_ESCAPE]:  # Escape-Taste gedrückt
             running = False  # Spiel beenden
 
+def show_game_over_screen():
+    screen.fill(BLACK)
+
+    # Game-Over-Text rendern
+    game_over_text = title_font.render("Game Over", True, RED)
+    game_over_rect = game_over_text.get_rect(center=(GAME_SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 50))
+
+    # Anweisungstext rendern
+    instruction_text = instruction_font.render("Drücke R, um das Spiel neu zu starten", True, WHITE)
+    instruction_rect = instruction_text.get_rect(center=(GAME_SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50))
+
+    # Text auf dem Bildschirm zeichnen
+    screen.blit(game_over_text, game_over_rect)
+    screen.blit(instruction_text, instruction_rect)
+
+    pygame.display.flip()
+
+    # Warten auf die Eingabe des Spielers (R für Neustart)
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_r:  # Spiel neustarten bei Drücken von 'R'
+                    waiting = False
+
 # Startbildschirm anzeigen
 show_start_screen()
 
@@ -388,6 +416,27 @@ while running:
 
     # Überprüfe die Explosionseffekte der Bomben auf Steine
     check_bomb_explosion_effect(bombs, stones)
+
+    # Überprüfen, ob der Spieler mit einem Gegner kollidiert
+    for enemy in enemies:
+        if player.rect.colliderect(enemy.rect):
+            show_game_over_screen()  # Game-Over-Screen aufrufen
+            running = False  # Spiel beenden
+
+    # Überprüfen, ob der Spieler von einer Bombenexplosion getroffen wird
+    for bomb in bombs:
+        if bomb.exploded:
+            explosion_rects = [
+                bomb.rect,
+                pygame.Rect(bomb.rect.x + PLAYER_SIZE, bomb.rect.y, PLAYER_SIZE, PLAYER_SIZE),  # Rechts
+                pygame.Rect(bomb.rect.x - PLAYER_SIZE, bomb.rect.y, PLAYER_SIZE, PLAYER_SIZE),  # Links
+                pygame.Rect(bomb.rect.x, bomb.rect.y + PLAYER_SIZE, PLAYER_SIZE, PLAYER_SIZE),  # Unten
+                pygame.Rect(bomb.rect.x, bomb.rect.y - PLAYER_SIZE, PLAYER_SIZE, PLAYER_SIZE)  # Oben
+            ]
+            for explosion_rect in explosion_rects:
+                if player.rect.colliderect(explosion_rect):
+                    show_game_over_screen()  # Game-Over-Screen aufrufen
+                    running = False  # Spiel beenden
 
     # Alle explodierten Bomben aus der Liste entfernen
     bombs = [bomb for bomb in bombs if not bomb.exploded]
