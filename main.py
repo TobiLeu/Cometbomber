@@ -17,7 +17,7 @@ PLAYER_SPEED = 3
 ENEMY_SPEED = 1
 PLAYER_SIZE = 30
 BOMB_TIME = 3000  # Zeit bis zur Explosion in Millisekunden
-EXPLOSION_DURATION = 500  # Dauer der Explosion in Millisekunden
+EXPLOSION_DURATION = 1500  # Dauer der Explosion in Millisekunden
 PLAYER_START_POSITION = 1  # Startposition des Spielers
 PLAYER_BOMB_MAXIMUM = 3
 GRANIT_POSITIONS = [32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58,
@@ -314,13 +314,19 @@ def check_bomb_explosion_effect(bombs, stones):
                 pygame.Rect(bomb.rect.x, bomb.rect.y - PLAYER_SIZE, PLAYER_SIZE, PLAYER_SIZE)   # Oben
             ]
 
-            #Explosion abspielen
+            # Explosion abspielen
             bombsound.play()
 
             # Überprüfe auf Kollision mit Steinen und entferne die Steine
             destroyed_stones = [stone for stone in stones if any(explosion_rect.colliderect(stone.rect) for explosion_rect in explosion_rects)]
             PLAYER_SCORE += len(destroyed_stones) * SCORE_VALUE_STONE  # Punkte basierend auf der Anzahl zerstörter Steine vergeben
             stones[:] = [stone for stone in stones if stone not in destroyed_stones]
+
+            ############################################
+            # Zeichne die Explosionen visuell auf dem Bildschirm
+            for explosion_rect in explosion_rects:
+                pygame.draw.rect(screen, RED, explosion_rect)  # Explosion visuell darstellen
+            ###########################################
 
 # Startbildschirm-Funktion
 def show_start_screen():
@@ -487,12 +493,21 @@ while operational:
         for bomb in bombs:
             bomb.update()
             if bomb.exploded:
-                pygame.draw.rect(screen, RED, bomb.rect)  # Explosion visuell darstellen
+                # Explosion visuell darstellen
+                for explosion_rect in [
+                    pygame.Rect(bomb.rect.x, bomb.rect.y, PLAYER_SIZE, PLAYER_SIZE),  # Bombe selbst
+                    pygame.Rect(bomb.rect.x + PLAYER_SIZE, bomb.rect.y, PLAYER_SIZE, PLAYER_SIZE),  # Rechts
+                    pygame.Rect(bomb.rect.x - PLAYER_SIZE, bomb.rect.y, PLAYER_SIZE, PLAYER_SIZE),  # Links
+                    pygame.Rect(bomb.rect.x, bomb.rect.y + PLAYER_SIZE, PLAYER_SIZE, PLAYER_SIZE),  # Unten
+                    pygame.Rect(bomb.rect.x, bomb.rect.y - PLAYER_SIZE, PLAYER_SIZE, PLAYER_SIZE)  # Oben
+                ]:
+                    pygame.draw.rect(screen, RED, explosion_rect)  # Explosion visuell darstellen
             else:
                 bomb.draw(screen)
 
         # Überprüfe die Explosionseffekte der Bomben auf Steine
         check_bomb_explosion_effect(bombs, stones)
+
 
         # Überprüfen, ob der Spieler mit einem Gegner kollidiert
         for enemy in enemies:
