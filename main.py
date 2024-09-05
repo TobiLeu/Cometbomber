@@ -324,6 +324,9 @@ def show_start_screen():
     # Warten auf die Eingabe des Spielers
     waiting = True
     while waiting:
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_ESCAPE]:  # Escape-Taste gedrückt
+            sys.exit()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -358,6 +361,41 @@ def show_game_over_screen():
     # Warten auf die Eingabe des Spielers (R für Neustart)
     waiting = True
     while waiting:
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_ESCAPE]:  # Escape-Taste gedrückt
+            sys.exit()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_r:  # Spiel neustarten bei Drücken von 'R'
+                    waiting = False
+
+def show_winner_screen():
+    # Bildschirm schwarz füllen
+    screen.fill(BLACK)
+
+    # Winner Text rendern
+    winner_text = title_font.render("Winner", True, RED)
+    winner_rect = winner_text.get_rect(center=(GAME_SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 50))
+
+    # Anweisungstext rendern
+    instruction_text = instruction_font.render("Drücke R, um das Spiel neu zu starten", True, WHITE)
+    instruction_rect = instruction_text.get_rect(center=(GAME_SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50))
+
+    # Text auf dem Bildschirm zeichnen
+    screen.blit(winner_text, winner_rect)
+    screen.blit(instruction_text, instruction_rect)
+
+    pygame.display.flip()
+
+    # Warten auf die Eingabe des Spielers (R für Neustart)
+    waiting = True
+    while waiting:
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_ESCAPE]:  # Escape-Taste gedrückt
+            sys.exit()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -375,6 +413,8 @@ goal_rect = pygame.Rect(GAME_SCREEN_WIDTH - 15, GAME_SCREEN_HEIGHT - 15, 15, 15)
 # Hauptspiel-Schleife
 operational = True
 running = True
+gameover = False
+winner = False
 while operational:
     while running:
         # Ereignisse abfragen
@@ -470,6 +510,8 @@ while operational:
         # Überprüfen, ob der Spieler das Ziel erreicht hat
         if player.rect.colliderect(goal_rect):
             running = False
+            winner = True
+
 
         # Aktuelle Zeit berechnen
         current_time = pygame.time.get_ticks()
@@ -490,22 +532,36 @@ while operational:
 
         # Frame-Rate begrenzen (60 FPS)
         clock.tick(60)
+    #GameOver Screen anzeigen und Variablen zurücksetzen
     while gameover:
+        #Zeige Game Over Screen
         show_game_over_screen()
-        keys = pygame.key.get_pressed()
-        # Wenn 'R' gedrückt wird, Spiel neustarten
-        # Spiel beenden
-        if keys[pygame.K_ESCAPE]:  # Escape-Taste gedrückt
-            sys.exit()
-        if keys[pygame.K_r]:
-            # Variablen zurücksetzen, um das Spiel neu zu starten
-            player = Player(player_x_position(PLAYER_START_POSITION), player_y_position(PLAYER_START_POSITION))
-            bombs = []
-            PLAYER_SCORE = 0
-            start_time = pygame.time.get_ticks()
-              # Spiel wieder starten
-            running = True
-            gameover = False
+
+        # Variablen zurücksetzen, um das Spiel neu zu starten
+        player = Player(player_x_position(PLAYER_START_POSITION), player_y_position(PLAYER_START_POSITION))
+        bombs = []
+        PLAYER_SCORE = 0
+        start_time = pygame.time.get_ticks()
+
+        # Spiel wieder starten
+        running = True
+        gameover = False
+
+    while winner:
+        # Winner Screen anzeigen
+        show_winner_screen()
+
+        # Variablen zurücksetzen, um das Spiel neu zu starten
+        player = Player(player_x_position(PLAYER_START_POSITION), player_y_position(PLAYER_START_POSITION))
+        bombs = []
+        PLAYER_SCORE = 0
+        start_time = pygame.time.get_ticks()
+
+        # Spiel wieder starten
+        running = True
+        winner = False
+
+
 
 
 
