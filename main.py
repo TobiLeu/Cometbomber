@@ -378,17 +378,6 @@ while running:
     pygame.draw.rect(screen, BACKGROUND, goal_rect)
     screen.blit(rocket_image, (GAME_SCREEN_WIDTH - TILE_SIZE, GAME_SCREEN_HEIGHT - TILE_SIZE))
 
-    # Spieler zeichnen
-    screen.blit(player.image, player.rect.topleft)
-
-    # Granits zeichnen
-    for granit in granits:
-        granit.draw(screen)
-
-    #Stones zeichnen
-    for stone in stones:
-        stone.draw(screen)
-
     # Bomben aktualisieren und zeichnen
     for bomb in bombs:
         bomb.update()
@@ -402,6 +391,17 @@ while running:
 
     # Alle explodierten Bomben aus der Liste entfernen
     bombs = [bomb for bomb in bombs if not bomb.exploded]
+
+    # Spieler zeichnen
+    screen.blit(player.image, player.rect.topleft)
+
+    # Granits zeichnen
+    for granit in granits:
+        granit.draw(screen)
+
+    #Stones zeichnen
+    for stone in stones:
+        stone.draw(screen)
 
     # Gegner zeichnen
     for enemy in enemies:
