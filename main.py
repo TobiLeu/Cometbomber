@@ -43,7 +43,7 @@ STONE_POSITIONS = [33, 35, 37, 39, 41, 43, 45, 47, 49, 51, 53, 55, 57, 62, 64, 6
 SCORE_VALUE_STONE = 10
 PLAYER_SCORE = 0
 ENEMY_POSITIONS = [80,205]
-ENEMY_DIRECTION_CHANGE_INTERVAL = 2000  # Zeit in Millisekunden
+ENEMY_DIRECTION_CHANGE_INTERVAL = 5000  # Zeit in Millisekunden
 GAME_DURATION = 120000  # Spieldauer in Millisekunden (z. B. 120000 ms = 2 Minuten)
 
 start_time = pygame.time.get_ticks()  # Startzeit des Spiels
@@ -431,6 +431,7 @@ while operational:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+                operational = False
 
             # Bombe platzieren bei Tastendruck SPACE
             if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and len(bombs) <= PLAYER_BOMB_MAXIMUM - 1 :
@@ -546,6 +547,11 @@ while operational:
 
     #GameOver Screen anzeigen und Variablen zurücksetzen
     while gameover:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                operational = False
+
         #Zeige Game Over Screen
         show_game_over_screen()
 
@@ -564,6 +570,11 @@ while operational:
         gameover = False
 
     while winner:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                operational = False
+
         # Winner Screen anzeigen
         show_winner_screen()
 
