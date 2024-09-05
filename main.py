@@ -42,6 +42,9 @@ SCORE_VALUE_STONE = 10
 PLAYER_SCORE = 0
 ENEMY_POSITIONS = [80,205]
 ENEMY_DIRECTION_CHANGE_INTERVAL = 2000  # Zeit in Millisekunden
+GAME_DURATION = 120000  # Spieldauer in Millisekunden (z. B. 120000 ms = 2 Minuten)
+
+start_time = pygame.time.get_ticks()  # Startzeit des Spiels
 
 # Farben
 WHITE = (255, 255, 255)
@@ -55,7 +58,7 @@ BACKGROUND = (244, 164, 96)
 # Schriftarten laden
 title_font = pygame.font.SysFont('Impact', 72)
 instruction_font = pygame.font.SysFont('Impact', 36)
-
+infobar_font = pygame.font.SysFont('Impact', 20)
 
 # Bildschirm einrichten
 screen = pygame.display.set_mode((GAME_SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -96,6 +99,7 @@ granit_image = pygame.image.load('granit.png').convert_alpha()  # Pfad zum Grani
 stone_image = pygame.image.load('stone.png').convert_alpha()  # Pfad zum Stonebild
 bomb_image = pygame.image.load('bomb.png').convert_alpha()  # Pfad zum Bombbild
 enemy_image = pygame.image.load('enemy.png').convert_alpha()  # Pfad zum Gegnerbild
+rocket_image = pygame.image.load('rocket.png').convert_alpha()  # Pfad zum Gegnerbild
 
 # Spielerklasse definieren
 class Player:
@@ -335,8 +339,8 @@ def show_start_screen():
 # Startbildschirm anzeigen
 show_start_screen()
 
-# Punktezähler Schriftart
-score_font = pygame.font.SysFont('Impact', 20)
+# Ziel erstellen
+goal_rect = pygame.Rect(GAME_SCREEN_WIDTH - 15, GAME_SCREEN_HEIGHT - 15, 15, 15)
 
 # Hauptspiel-Schleife
 running = True
@@ -369,6 +373,10 @@ while running:
 
     # Bildschirm mit Hintergrundfarbe füllen
     screen.fill(BACKGROUND)
+
+    # Ziel zeichnen
+    pygame.draw.rect(screen, BACKGROUND, goal_rect)
+    screen.blit(rocket_image, (GAME_SCREEN_WIDTH - TILE_SIZE, GAME_SCREEN_HEIGHT - TILE_SIZE))
 
     # Spieler zeichnen
     screen.blit(player.image, player.rect.topleft)
@@ -403,13 +411,31 @@ while running:
     pygame.draw.rect(screen, GRAY, (0, 680, 1160, 40))
 
     # Punkte anzeigen
-    score_text = score_font.render(f"Score: {PLAYER_SCORE}", True, WHITE)
+    score_text = infobar_font.render(f"Score: {PLAYER_SCORE}", True, WHITE)
     screen.blit(score_text, (1050, 688))  # Punkte oben links anzeigen
 
     # Überprüfen, ob der Spieler mit einem Gegner kollidiert
     for enemy in enemies:
         if player.rect.colliderect(enemy.rect):
             running = False  # Spiel beenden, wenn eine Kollision erkannt wird
+
+    # Überprüfen, ob der Spieler das Ziel erreicht hat
+    if player.rect.colliderect(goal_rect):
+        running = False
+
+    # Aktuelle Zeit berechnen
+    current_time = pygame.time.get_ticks()
+
+    # Restzeit berechnen
+    time_left = (GAME_DURATION - (current_time - start_time)) // 1000  # In Sekunden umrechnen
+
+    # Timer auf dem Bildschirm anzeigen
+    timer_text = infobar_font.render(f"Time: {time_left}", True, WHITE)
+    screen.blit(timer_text, (900, 688))  # Timer auf dem Bildschirm anzeigen
+
+    # Spiel beenden, wenn die Zeit abgelaufen ist
+    if current_time - start_time >= GAME_DURATION:
+        break
 
     # Bildschirm aktualisieren
     pygame.display.flip()
