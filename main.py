@@ -466,7 +466,9 @@ while running:
     # Überprüfen, ob der Spieler mit einem Gegner kollidiert
     for enemy in enemies:
         if player.rect.colliderect(enemy.rect):
+            show_game_over_screen()  # Game-Over-Screen aufrufen
             running = False  # Spiel beenden, wenn eine Kollision erkannt wird
+
 
     # Überprüfen, ob der Spieler das Ziel erreicht hat
     if player.rect.colliderect(goal_rect):
@@ -481,6 +483,15 @@ while running:
     # Timer auf dem Bildschirm anzeigen
     timer_text = infobar_font.render(f"Time: {time_left}", True, WHITE)
     screen.blit(timer_text, (900, 688))  # Timer auf dem Bildschirm anzeigen
+
+    # Wenn 'R' gedrückt wird, Spiel neustarten
+    '''if keys[pygame.K_r]:
+        # Variablen zurücksetzen, um das Spiel neu zu starten
+        player = Player(player_x_position(PLAYER_START_POSITION), player_y_position(PLAYER_START_POSITION))
+        bombs = []
+        PLAYER_SCORE = 0
+        start_time = pygame.time.get_ticks()
+        running = True  # Spiel wieder starten'''
 
     # Spiel beenden, wenn die Zeit abgelaufen ist
     if current_time - start_time >= GAME_DURATION:
