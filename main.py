@@ -3,15 +3,17 @@ import sys
 import pygame
 import random
 from sys import exit
+
 # Initialisiere Pygame
 pygame.init()
+pygame.mixer.init()
 
 # Spielkonstanten
 SCREEN_HEIGHT = 720
 GAME_SCREEN_WIDTH = 1160
 GAME_SCREEN_HEIGHT = 680
 TILE_SIZE = 40
-PLAYER_SPEED = 5
+PLAYER_SPEED = 3
 ENEMY_SPEED = 1
 PLAYER_SIZE = 30
 BOMB_TIME = 3000  # Zeit bis zur Explosion in Millisekunden
@@ -26,25 +28,29 @@ GRANIT_POSITIONS = [32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58,
                     332, 334, 336, 338, 340, 342, 344, 346, 348, 350, 352, 354, 356, 358,
                     392, 394, 396, 398, 400, 402, 404, 406, 408, 410, 412, 414, 416, 418,
                     452, 454, 456, 458, 460, 462, 464, 466, 468, 470, 472, 474, 476, 478]  # Granit = nicht zerstörbares Hindernis
-STONE_POSITIONS = [33, 35, 37, 39, 41, 43, 45, 47, 49, 51, 53, 55, 57, 62, 64, 66, 68, 70,
-                   #72, 74, 76, 78, 80, 82, 84, 86, 88, 93, 95, 97, 99, 101, 103, 105, 107,
-                   109, 111, 113, 115, 117, 122, 124, 126, 128, 130, 132, 134, 136, 138,
-                   #140, 142, 144, 146, 148, 153, 155, 157, 159, 161, 163, 165, 167, 169,
-                   171, 173, 175, 177, 182, 184, 186, 188, 190, 192, 194, 196, 198, 200,
-                   #202, 204, 206, 208, 213, 215, 217, 219, 221, 223, 225, 227, 229, 231,
-                   233, 235, 237, 242, 244, 246, 248, 250, 252, 254, 256, 258, 260, 262,
-                  #264, 266, 268, 273, 275, 277, 279, 281, 283, 285, 287, 289, 291, 293,
-                   #295, 297, 302, 304, 306, 308, 310, 312, 314, 316, 318, 320, 322, 324,
-                   326, 328, 333, 335, 337, 339, 341, 343, 345, 347, 349, 351, 353, 355,
-                   357, 362, 364, 366, 368, 370, 372, 374, 376, 378, 380, 382, 384, 386,
-                  # 388, 393, 395, 397, 399, 401, 403, 405, 407, 409, 411, 413, 415, 417,
-                  # 422, 424, 426, 428, 430, 432, 434, 436, 438, 440, 442, 444, 446, 448,
-                   453, 455, 457, 459, 461, 463, 465, 467, 469, 471, 473, 475, 477] # Stone = zerstörbares Hindernis
+
+STONE_POSITIONS = [3,4,5,10,16,22,28,29,
+                   43,59,
+                   63,67,69,75,76,79,85,
+                   91,109,113,
+                   121,125,126,134,139,142,134,146,
+                   151,153,155,163,177,
+                   186,190,191,196,197,204,
+                   213,239,
+                   244,249,250,255,256,259,260,262,266,
+                   271,295,297,
+                   304,314,316,324,
+                   335,341,343,349,355,
+                   366,372,373,377,378,379,382,383,
+                   397,413,
+                   429,432,436,439,448,449,
+                   451,471,
+                   482,486,492,496,501,502,506,507,508] # = zerstörbares Hindernis
 SCORE_VALUE_STONE = 10
 PLAYER_SCORE = 0
-ENEMY_POSITIONS = [80,205]
+ENEMY_POSITIONS = [131,265]
 ENEMY_DIRECTION_CHANGE_INTERVAL = 5000  # Zeit in Millisekunden
-GAME_DURATION = 120000  # Spieldauer in Millisekunden (z. B. 120000 ms = 2 Minuten)
+GAME_DURATION = 180000  # Spieldauer in Millisekunden (z. B. 120000 ms = 2 Minuten)
 
 start_time = pygame.time.get_ticks()  # Startzeit des Spiels
 
@@ -101,7 +107,17 @@ granit_image = pygame.image.load('granit.png').convert_alpha()  # Pfad zum Grani
 stone_image = pygame.image.load('stone.png').convert_alpha()  # Pfad zum Stonebild
 bomb_image = pygame.image.load('bomb.png').convert_alpha()  # Pfad zum Bombbild
 enemy_image = pygame.image.load('enemy.png').convert_alpha()  # Pfad zum Gegnerbild
-rocket_image = pygame.image.load('rocket.png').convert_alpha()  # Pfad zum Gegnerbild
+rocket_image = pygame.image.load('rocket.png').convert_alpha()  # Pfad zum Raketenbild
+background_image = pygame.image.load('background.png').convert_alpha()  # Pfad zum Hintergrund
+
+# Musik laden
+pygame.mixer.music.load("stoneworld_battle.mp3")
+bombsound = pygame.mixer.Sound('bomb.wav')
+
+# Musik initialisieren
+pygame.mixer.music.play(-1)  # -1 bedeutet, in Endlosschleife
+pygame.mixer.music.set_volume(0.1)  # Lautstärke Hintergrundmusik von 0.0 bis 1.0
+bombsound.set_volume(0.2)  # Lautstärke Bombe
 
 # Spielerklasse definieren
 class Player:
@@ -298,6 +314,9 @@ def check_bomb_explosion_effect(bombs, stones):
                 pygame.Rect(bomb.rect.x, bomb.rect.y - PLAYER_SIZE, PLAYER_SIZE, PLAYER_SIZE)   # Oben
             ]
 
+            #Explosion abspielen
+            bombsound.play()
+
             # Überprüfe auf Kollision mit Steinen und entferne die Steine
             destroyed_stones = [stone for stone in stones if any(explosion_rect.colliderect(stone.rect) for explosion_rect in explosion_rects)]
             PLAYER_SCORE += len(destroyed_stones) * SCORE_VALUE_STONE  # Punkte basierend auf der Anzahl zerstörter Steine vergeben
@@ -454,11 +473,14 @@ while operational:
         for enemy in enemies:
             enemy.move(granits + stones)
 
-        # Bildschirm mit Hintergrundfarbe füllen
-        screen.fill(BACKGROUND)
-
         # Ziel zeichnen
         pygame.draw.rect(screen, BACKGROUND, goal_rect)
+
+        # Hintergrund zeichnen
+        for i in range( ( ( int( GAME_SCREEN_WIDTH / TILE_SIZE) + 1 ) * int( GAME_SCREEN_HEIGHT / TILE_SIZE) ) ):
+            screen.blit(background_image, ( x_position(i), y_position(i) ) )
+
+        # Rakete zeichnen
         screen.blit(rocket_image, (GAME_SCREEN_WIDTH - TILE_SIZE, GAME_SCREEN_HEIGHT - TILE_SIZE))
 
         # Bomben aktualisieren und zeichnen
@@ -590,5 +612,6 @@ while operational:
         # Spiel wieder starten
         running = True
         winner = False
+
 
 pygame.quit()
