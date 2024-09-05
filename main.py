@@ -1,6 +1,8 @@
+import sys
+
 import pygame
 import random
-
+from sys import exit
 # Initialisiere Pygame
 pygame.init()
 
@@ -371,136 +373,140 @@ show_start_screen()
 goal_rect = pygame.Rect(GAME_SCREEN_WIDTH - 15, GAME_SCREEN_HEIGHT - 15, 15, 15)
 
 # Hauptspiel-Schleife
+operational = True
 running = True
-while running:
-    # Ereignisse abfragen
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
+while operational:
+    while running:
+        # Ereignisse abfragen
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+            # Bombe platzieren bei Tastendruck SPACE
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and len(bombs) <= PLAYER_BOMB_MAXIMUM - 1 :
+                bomb_x = (player.rect.x // TILE_SIZE) * TILE_SIZE
+                bomb_y = (player.rect.y // TILE_SIZE) * TILE_SIZE
+                if can_place_bomb(bomb_x, bomb_y, bombs, granits + stones):
+                    bombs.append(Bomb(bomb_x, bomb_y))
+
+        # Tasteneingaben abfragen
+        keys = pygame.key.get_pressed()
+
+        # Spiel beenden
+        if keys[pygame.K_ESCAPE]:  # Escape-Taste gedrückt
+            sys.exit()
+
+        # Spielerbewegung abfragen
+        player.move(keys, granits + stones)
+
+        # Gegnerbewegung abfragen
+        for enemy in enemies:
+            enemy.move(granits + stones)
+
+        # Bildschirm mit Hintergrundfarbe füllen
+        screen.fill(BACKGROUND)
+
+        # Ziel zeichnen
+        pygame.draw.rect(screen, BACKGROUND, goal_rect)
+        screen.blit(rocket_image, (GAME_SCREEN_WIDTH - TILE_SIZE, GAME_SCREEN_HEIGHT - TILE_SIZE))
+
+        # Bomben aktualisieren und zeichnen
+        for bomb in bombs:
+            bomb.update()
+            if bomb.exploded:
+                pygame.draw.rect(screen, RED, bomb.rect)  # Explosion visuell darstellen
+            else:
+                bomb.draw(screen)
+
+        # Überprüfe die Explosionseffekte der Bomben auf Steine
+        check_bomb_explosion_effect(bombs, stones)
+
+        # Überprüfen, ob der Spieler mit einem Gegner kollidiert
+        for enemy in enemies:
+            if player.rect.colliderect(enemy.rect):
+                running = False  # Spiel beenden
+                gameover = True
+
+        # Überprüfen, ob der Spieler von einer Bombenexplosion getroffen wird
+        for bomb in bombs:
+            if bomb.exploded:
+                explosion_rects = [
+                    bomb.rect,
+                    pygame.Rect(bomb.rect.x + PLAYER_SIZE, bomb.rect.y, PLAYER_SIZE, PLAYER_SIZE),  # Rechts
+                    pygame.Rect(bomb.rect.x - PLAYER_SIZE, bomb.rect.y, PLAYER_SIZE, PLAYER_SIZE),  # Links
+                    pygame.Rect(bomb.rect.x, bomb.rect.y + PLAYER_SIZE, PLAYER_SIZE, PLAYER_SIZE),  # Unten
+                    pygame.Rect(bomb.rect.x, bomb.rect.y - PLAYER_SIZE, PLAYER_SIZE, PLAYER_SIZE)  # Oben
+                ]
+                for explosion_rect in explosion_rects:
+                    if player.rect.colliderect(explosion_rect):
+                        gameover = True
+                        running = False  # Spiel beenden
+
+        # Alle explodierten Bomben aus der Liste entfernen
+        bombs = [bomb for bomb in bombs if not bomb.exploded]
+
+        # Spieler zeichnen
+        screen.blit(player.image, player.rect.topleft)
+
+        # Granits zeichnen
+        for granit in granits:
+            granit.draw(screen)
+
+        #Stones zeichnen
+        for stone in stones:
+            stone.draw(screen)
+
+        # Gegner zeichnen
+        for enemy in enemies:
+            enemy.draw(screen)
+
+        # Infobar zeichnen
+        pygame.draw.rect(screen, GRAY, (0, 680, 1160, 40))
+
+        # Punkte anzeigen
+        score_text = infobar_font.render(f"Score: {PLAYER_SCORE}", True, WHITE)
+        screen.blit(score_text, (1050, 688))  # Punkte oben links anzeigen
+
+        # Überprüfen, ob der Spieler das Ziel erreicht hat
+        if player.rect.colliderect(goal_rect):
             running = False
 
-        # Bombe platzieren bei Tastendruck SPACE
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and len(bombs) <= PLAYER_BOMB_MAXIMUM - 1 :
-            bomb_x = (player.rect.x // TILE_SIZE) * TILE_SIZE
-            bomb_y = (player.rect.y // TILE_SIZE) * TILE_SIZE
-            if can_place_bomb(bomb_x, bomb_y, bombs, granits + stones):
-                bombs.append(Bomb(bomb_x, bomb_y))
+        # Aktuelle Zeit berechnen
+        current_time = pygame.time.get_ticks()
 
-    # Tasteneingaben abfragen
-    keys = pygame.key.get_pressed()
+        # Restzeit berechnen
+        time_left = (GAME_DURATION - (current_time - start_time)) // 1000  # In Sekunden umrechnen
 
-    # Spiel beenden
-    if keys[pygame.K_ESCAPE]:  # Escape-Taste gedrückt
-        running = False  # Spiel beenden
+        # Timer auf dem Bildschirm anzeigen
+        timer_text = infobar_font.render(f"Time: {time_left}", True, WHITE)
+        screen.blit(timer_text, (900, 688))  # Timer auf dem Bildschirm anzeigen
 
-    # Spielerbewegung abfragen
-    player.move(keys, granits + stones)
+        # Spiel beenden, wenn die Zeit abgelaufen ist
+        if current_time - start_time >= GAME_DURATION:
+            break
 
-    # Gegnerbewegung abfragen
-    for enemy in enemies:
-        enemy.move(granits + stones)
+        # Bildschirm aktualisieren
+        pygame.display.flip()
 
-    # Bildschirm mit Hintergrundfarbe füllen
-    screen.fill(BACKGROUND)
-
-    # Ziel zeichnen
-    pygame.draw.rect(screen, BACKGROUND, goal_rect)
-    screen.blit(rocket_image, (GAME_SCREEN_WIDTH - TILE_SIZE, GAME_SCREEN_HEIGHT - TILE_SIZE))
-
-    # Bomben aktualisieren und zeichnen
-    for bomb in bombs:
-        bomb.update()
-        if bomb.exploded:
-            pygame.draw.rect(screen, RED, bomb.rect)  # Explosion visuell darstellen
-        else:
-            bomb.draw(screen)
-
-    # Überprüfe die Explosionseffekte der Bomben auf Steine
-    check_bomb_explosion_effect(bombs, stones)
-
-    # Überprüfen, ob der Spieler mit einem Gegner kollidiert
-    for enemy in enemies:
-        if player.rect.colliderect(enemy.rect):
-            show_game_over_screen()  # Game-Over-Screen aufrufen
-            running = False  # Spiel beenden
-
-    # Überprüfen, ob der Spieler von einer Bombenexplosion getroffen wird
-    for bomb in bombs:
-        if bomb.exploded:
-            explosion_rects = [
-                bomb.rect,
-                pygame.Rect(bomb.rect.x + PLAYER_SIZE, bomb.rect.y, PLAYER_SIZE, PLAYER_SIZE),  # Rechts
-                pygame.Rect(bomb.rect.x - PLAYER_SIZE, bomb.rect.y, PLAYER_SIZE, PLAYER_SIZE),  # Links
-                pygame.Rect(bomb.rect.x, bomb.rect.y + PLAYER_SIZE, PLAYER_SIZE, PLAYER_SIZE),  # Unten
-                pygame.Rect(bomb.rect.x, bomb.rect.y - PLAYER_SIZE, PLAYER_SIZE, PLAYER_SIZE)  # Oben
-            ]
-            for explosion_rect in explosion_rects:
-                if player.rect.colliderect(explosion_rect):
-                    show_game_over_screen()  # Game-Over-Screen aufrufen
-                    running = False  # Spiel beenden
-
-    # Alle explodierten Bomben aus der Liste entfernen
-    bombs = [bomb for bomb in bombs if not bomb.exploded]
-
-    # Spieler zeichnen
-    screen.blit(player.image, player.rect.topleft)
-
-    # Granits zeichnen
-    for granit in granits:
-        granit.draw(screen)
-
-    #Stones zeichnen
-    for stone in stones:
-        stone.draw(screen)
-
-    # Gegner zeichnen
-    for enemy in enemies:
-        enemy.draw(screen)
-
-    # Infobar zeichnen
-    pygame.draw.rect(screen, GRAY, (0, 680, 1160, 40))
-
-    # Punkte anzeigen
-    score_text = infobar_font.render(f"Score: {PLAYER_SCORE}", True, WHITE)
-    screen.blit(score_text, (1050, 688))  # Punkte oben links anzeigen
-
-    # Überprüfen, ob der Spieler mit einem Gegner kollidiert
-    for enemy in enemies:
-        if player.rect.colliderect(enemy.rect):
-            show_game_over_screen()  # Game-Over-Screen aufrufen
-            running = False  # Spiel beenden, wenn eine Kollision erkannt wird
+        # Frame-Rate begrenzen (60 FPS)
+        clock.tick(60)
+    while gameover:
+        show_game_over_screen()
+        keys = pygame.key.get_pressed()
+        # Wenn 'R' gedrückt wird, Spiel neustarten
+        # Spiel beenden
+        if keys[pygame.K_ESCAPE]:  # Escape-Taste gedrückt
+            sys.exit()
+        if keys[pygame.K_r]:
+            # Variablen zurücksetzen, um das Spiel neu zu starten
+            player = Player(player_x_position(PLAYER_START_POSITION), player_y_position(PLAYER_START_POSITION))
+            bombs = []
+            PLAYER_SCORE = 0
+            start_time = pygame.time.get_ticks()
+              # Spiel wieder starten
+            running = True
+            gameover = False
 
 
-    # Überprüfen, ob der Spieler das Ziel erreicht hat
-    if player.rect.colliderect(goal_rect):
-        running = False
-
-    # Aktuelle Zeit berechnen
-    current_time = pygame.time.get_ticks()
-
-    # Restzeit berechnen
-    time_left = (GAME_DURATION - (current_time - start_time)) // 1000  # In Sekunden umrechnen
-
-    # Timer auf dem Bildschirm anzeigen
-    timer_text = infobar_font.render(f"Time: {time_left}", True, WHITE)
-    screen.blit(timer_text, (900, 688))  # Timer auf dem Bildschirm anzeigen
-
-    # Wenn 'R' gedrückt wird, Spiel neustarten
-    '''if keys[pygame.K_r]:
-        # Variablen zurücksetzen, um das Spiel neu zu starten
-        player = Player(player_x_position(PLAYER_START_POSITION), player_y_position(PLAYER_START_POSITION))
-        bombs = []
-        PLAYER_SCORE = 0
-        start_time = pygame.time.get_ticks()
-        running = True  # Spiel wieder starten'''
-
-    # Spiel beenden, wenn die Zeit abgelaufen ist
-    if current_time - start_time >= GAME_DURATION:
-        break
-
-    # Bildschirm aktualisieren
-    pygame.display.flip()
-
-    # Frame-Rate begrenzen (60 FPS)
-    clock.tick(60)
 
 pygame.quit()
