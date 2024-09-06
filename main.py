@@ -1,5 +1,4 @@
 import sys
-
 import pygame
 import random
 from sys import exit
@@ -20,39 +19,42 @@ BOMB_TIME = 3000  # Zeit bis zur Explosion in Millisekunden
 EXPLOSION_DURATION = 1000  # Dauer der Explosion in Millisekunden
 PLAYER_START_POSITION = 1  # Startposition des Spielers
 PLAYER_BOMB_MAXIMUM = 3
+SCORE_VALUE_STONE = 10
+SCORE_VALUE_ENEMY = 250
+PLAYER_SCORE = 0
+ENEMY_DIRECTION_CHANGE_INTERVAL = 5000  # Zeit in Millisekunden
+GAME_DURATION = 240000  # Spieldauer in Millisekunden (z. B. 120000 ms = 2 Minuten)
 GRANIT_POSITIONS = [32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58,
                     92, 94, 96, 98, 100, 102, 104, 106, 108, 110, 112, 114, 116, 118,
                     152, 154, 156, 158, 160, 162, 164, 166, 168, 170, 172, 174, 176, 178,
                     212, 214, 216, 218, 220, 222, 224, 226, 228, 230, 232, 234, 236, 238,
                     272, 274, 276, 278, 280, 282, 284, 286, 288, 290, 292, 294, 296, 298,
                     332, 334, 336, 338, 340, 342, 344, 346, 348, 350, 352, 354, 356, 358,
+                    372,
                     392, 394, 396, 398, 400, 402, 404, 406, 408, 410, 412, 414, 416, 418,
-                    452, 454, 456, 458, 460, 462, 464, 466, 468, 470, 472, 474, 476, 478]  # Granit = nicht zerstörbares Hindernis
+                    432,
+                    452, 454, 456, 458, 460, 462, 464, 466, 468, 470, 472, 474, 476, 478,
+                    492]  # Granit = nicht zerstörbares Hindernis
 
-STONE_POSITIONS = [3,4,5,10,16,22,28,29,
+STONE_POSITIONS = [3,4,5,10,16,17,18,22,28,29,
                    43,59,
-                   63,67,69,75,76,79,85,
-                   91,109,113,
+                   63,67,69,72,75,76,79,80,85,
+                   91,107,109,113,
                    121,125,126,134,139,142,134,146,
-                   151,153,155,163,177,
+                   151,153,155,157,161,177,
                    186,190,191,196,197,204,
                    213,239,
-                   244,249,250,255,256,259,260,262,266,
-                   271,295,297,
-                   304,314,316,324,
-                   335,341,343,349,355,
-                   366,372,373,377,378,379,382,383,
-                   397,413,
-                   429,432,436,439,448,449,
-                   451,471,
-                   482,486,492,496,501,502,506,507,508] # = zerstörbares Hindernis
-SCORE_VALUE_STONE = 10
-PLAYER_SCORE = 0
-ENEMY_POSITIONS = [131,265]
-ENEMY_DIRECTION_CHANGE_INTERVAL = 5000  # Zeit in Millisekunden
-GAME_DURATION = 180000  # Spieldauer in Millisekunden (z. B. 120000 ms = 2 Minuten)
+                   244,246,247,249,250,255,256,259,260,262,266,
+                   271,277,279,287,295,297,
+                   301,304,312,314,316,317,324,
+                   335,339,341,343,349,355,
+                   366,373,377,378,379,382,383,
+                   413,
+                   428,429,436,439,448,449,
+                   451,457,471,
+                   481,482,486,487,490,495,496,497,501,502,506,507,508] # = zerstörbares Hindernis
 
-start_time = pygame.time.get_ticks()  # Startzeit des Spiels
+ENEMY_POSITIONS = [131,265,369]
 
 # Farben
 WHITE = (255, 255, 255)
@@ -76,6 +78,9 @@ pygame.display.set_caption("Cometbomber")
 
 # Spieluhr
 clock = pygame.time.Clock()
+
+# Startzeit des Spiels
+start_time = pygame.time.get_ticks()
 
 # Funktionen Spielfeld in Rastereinteilung: x-Koordinate, y-Koordinate
 def player_x_position(pos_number):
@@ -327,11 +332,11 @@ def check_bomb_explosion_effect(bombs, stones):
             PLAYER_SCORE += len(destroyed_stones) * SCORE_VALUE_STONE  # Punkte basierend auf der Anzahl zerstörter Steine vergeben
             stones[:] = [stone for stone in stones if stone not in destroyed_stones]
 
-            ############################################
+
             # Zeichne die Explosionen visuell auf dem Bildschirm
             for explosion_rect in explosion_rects:
                 pygame.draw.rect(screen, RED, explosion_rect)  # Explosion visuell darstellen
-            ###########################################
+
 
 # Startbildschirm-Funktion
 def show_start_screen():
@@ -505,7 +510,7 @@ while operational:
 
         # Gegnerbewegung abfragen
         for enemy in enemies:
-            enemy.move(granits + stones)
+            enemy.move(granits + stones + bombs)
 
         # Ziel zeichnen
         pygame.draw.rect(screen, BACKGROUND, goal_rect)
@@ -543,7 +548,7 @@ while operational:
                 running = False  # Spiel beenden
                 gameover = True
 
-        # Überprüfen, ob der Spieler von einer Bombenexplosion getroffen wird
+        # Überprüfen, ob der Spieler oder Gegner von einer Bombenexplosion getroffen wird
         for bomb in bombs:
             if bomb.exploded:
                 explosion_rects = [
@@ -558,6 +563,13 @@ while operational:
                         gameover = True
                         running = False  # Spiel beenden
 
+                for explosion_rect in explosion_rects:
+                    for enemy in enemies:
+                        if enemy.rect.colliderect(explosion_rect):
+                            enemies.remove(enemy)
+                            PLAYER_SCORE = PLAYER_SCORE + SCORE_VALUE_ENEMY
+
+
         # Alle explodierten Bomben aus der Liste entfernen
         bombs = [bomb for bomb in bombs if not bomb.exploded]
 
@@ -568,7 +580,7 @@ while operational:
         for granit in granits:
             granit.draw(screen)
 
-        #Stones zeichnen
+        # Stones zeichnen
         for stone in stones:
             stone.draw(screen)
 
