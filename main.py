@@ -62,9 +62,11 @@ GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 GRAY = (90, 90, 90)
 BACKGROUND = (244, 164, 96)
+TUERKIS = (0, 197, 205)
 
 # Schriftarten laden
-title_font = pygame.font.SysFont('Impact', 72)
+main_font = pygame.font.Font('fonts/Neonrec.otf',72)
+title_font = pygame.font.SysFont('Impact', 60)
 instruction_font = pygame.font.SysFont('Impact', 36)
 infobar_font = pygame.font.SysFont('Impact', 20)
 
@@ -102,17 +104,18 @@ def y_position(pos_number):
     return y_coordinate
 
 # Bilder laden
-player_image = pygame.image.load('astronaut.png').convert_alpha()  # Pfad zum Astronautenbild
-granit_image = pygame.image.load('granit.png').convert_alpha()  # Pfad zum Granitbild
-stone_image = pygame.image.load('stone.png').convert_alpha()  # Pfad zum Stonebild
-bomb_image = pygame.image.load('bomb.png').convert_alpha()  # Pfad zum Bombbild
-enemy_image = pygame.image.load('enemy.png').convert_alpha()  # Pfad zum Gegnerbild
-rocket_image = pygame.image.load('rocket.png').convert_alpha()  # Pfad zum Raketenbild
-background_image = pygame.image.load('background.png').convert_alpha()  # Pfad zum Hintergrund
+player_image = pygame.image.load('textures/astronaut.png').convert_alpha()  # Pfad zum Astronautenbild
+granit_image = pygame.image.load('textures/granit.png').convert_alpha()  # Pfad zum Granitbild
+stone_image = pygame.image.load('textures/stone.png').convert_alpha()  # Pfad zum Stonebild
+bomb_image = pygame.image.load('textures/bomb.png').convert_alpha()  # Pfad zum Bombbild
+enemy_image = pygame.image.load('textures/enemy.png').convert_alpha()  # Pfad zum Gegnerbild
+rocket_image = pygame.image.load('textures/rocket.png').convert_alpha()  # Pfad zum Raketenbild
+background_image = pygame.image.load('textures/background.png').convert_alpha()  # Pfad zum Hintergrund
+startscreen_image = pygame.image.load('textures/startscreen.png').convert_alpha() # Pfad zum Startscreen Hintergrund
 
 # Musik laden
-pygame.mixer.music.load("stoneworld_battle.mp3")
-bombsound = pygame.mixer.Sound('bomb.wav')
+pygame.mixer.music.load("sounds/stoneworld_battle.mp3")
+bombsound = pygame.mixer.Sound('sounds/bomb.wav')
 
 # Musik initialisieren
 pygame.mixer.music.play(-1)  # -1 bedeutet, in Endlosschleife
@@ -330,19 +333,24 @@ def check_bomb_explosion_effect(bombs, stones):
 
 # Startbildschirm-Funktion
 def show_start_screen():
-    screen.fill(BACKGROUND)
+    # Bild laden
+    screen.blit(startscreen_image, (0, 0))
 
     # Titeltext rendern
-    title_text = title_font.render("Cometbomber", True, BLACK)
+    title_text = main_font.render("Cometbomber", True, TUERKIS)
     title_rect = title_text.get_rect(center=(GAME_SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 100))
 
     # Anweisungstext rendern
-    instruction_text = instruction_font.render("Drücke LEERTASTE, um zu starten", True, BLACK)
+    instruction_text = instruction_font.render("Drücke LEERTASTE, um zu starten", True, TUERKIS)
     instruction_rect = instruction_text.get_rect(center=(GAME_SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50))
+
+    #Spiel Beenden rendern
+    esc_text = infobar_font.render("SPIEL BEENDEN: ESC", True, RED)
 
     # Text auf dem Bildschirm zeichnen
     screen.blit(title_text, title_rect)
     screen.blit(instruction_text, instruction_rect)
+    screen.blit(esc_text, (50, 688))  # Spiel beenden unten links anzeigen
 
     pygame.display.flip()
 
@@ -367,24 +375,29 @@ def show_start_screen():
             running = False  # Spiel beenden
 
 def show_game_over_screen():
-    screen.fill(BLACK)
+    # Bild laden
+    screen.blit(startscreen_image, (0, 0))
 
     # Game-Over-Text rendern
-    game_over_text = title_font.render("Game Over", True, RED)
+    game_over_text = main_font.render("Game Over", True, RED)
     game_over_rect = game_over_text.get_rect(center=(GAME_SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 150))
 
     # Anweisungstext rendern
-    instruction_text = instruction_font.render("Drücke R, um das Spiel neu zu starten", True, WHITE)
+    instruction_text = instruction_font.render("Drücke R, um das Spiel neu zu starten", True, TUERKIS)
     instruction_rect = instruction_text.get_rect(center=(GAME_SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50))
 
     # Score rendern
-    score_text = title_font.render(f'Score: {PLAYER_SCORE}', True, RED)
+    score_text = title_font.render(f'Score: {PLAYER_SCORE}', True, TUERKIS)
     score_rect = score_text.get_rect(center=(GAME_SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 50))
+
+    # Spiel beenden rendern
+    esc_text = infobar_font.render("SPIEL BEENDEN: ESC", True, RED)
 
     # Text auf dem Bildschirm zeichnen
     screen.blit(game_over_text, game_over_rect)
     screen.blit(instruction_text, instruction_rect)
     screen.blit(score_text, score_rect)
+    screen.blit(esc_text, (50, 688))  # Spiel beenden unten links anzeigen
 
     pygame.display.flip()
 
@@ -403,11 +416,11 @@ def show_game_over_screen():
                     waiting = False
 
 def show_winner_screen():
-    # Bildschirm schwarz füllen
-    screen.fill(BLACK)
+    # Bild laden
+    screen.blit(startscreen_image, (0, 0))
 
     # Winner Text rendern
-    winner_text = title_font.render("Winner", True, RED)
+    winner_text = main_font.render("Winner", True, RED)
     winner_rect = winner_text.get_rect(center=(GAME_SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 150))
 
     # Anweisungstext rendern
@@ -415,13 +428,17 @@ def show_winner_screen():
     instruction_rect = instruction_text.get_rect(center=(GAME_SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50))
 
     # Score rendern
-    score_text = title_font.render(f'Score: {PLAYER_SCORE}', True, RED)
+    score_text = title_font.render(f'Score: {PLAYER_SCORE}', True, TUERKIS)
     score_rect = score_text.get_rect(center=(GAME_SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 50))
+
+    # Spiel beenden rendern
+    esc_text = infobar_font.render("SPIEL BEENDEN: ESC", True, RED)
 
     # Text auf dem Bildschirm zeichnen
     screen.blit(winner_text, winner_rect)
     screen.blit(instruction_text, instruction_rect)
     screen.blit(score_text, score_rect)
+    screen.blit(esc_text, (50, 688))  # Spiel beenden unten links anzeigen
 
     pygame.display.flip()
 
@@ -471,6 +488,12 @@ while operational:
         # Spiel beenden
         if keys[pygame.K_ESCAPE]:  # Escape-Taste gedrückt
             sys.exit()
+
+        # Cheat
+        if keys[pygame.K_c]:  # C Taste gedrückt
+            running = False
+            winner = True
+
 
         # Spielerbewegung abfragen
         player.move(keys, granits + stones)
@@ -554,6 +577,10 @@ while operational:
         # Punkte anzeigen
         score_text = infobar_font.render(f"Score: {PLAYER_SCORE}", True, WHITE)
         screen.blit(score_text, (1050, 688))  # Punkte oben links anzeigen
+
+        # Spiel beenden rendern
+        esc_text = infobar_font.render("SPIEL BEENDEN: ESC", True, WHITE)
+        screen.blit(esc_text, (50, 688))  # Spiel beenden unten links anzeigen
 
         # Überprüfen, ob der Spieler das Ziel erreicht hat
         if player.rect.colliderect(goal_rect):
