@@ -116,11 +116,13 @@ startscreen_image = pygame.image.load('textures/startscreen.png').convert_alpha(
 # Musik laden
 pygame.mixer.music.load("sounds/stoneworld_battle.mp3")
 bombsound = pygame.mixer.Sound('sounds/bomb.wav')
+game_over_sound = pygame.mixer.Sound('sounds/game_over.wav')
 
 # Musik initialisieren
 pygame.mixer.music.play(-1)  # -1 bedeutet, in Endlosschleife
 pygame.mixer.music.set_volume(0.1)  # Lautstärke Hintergrundmusik von 0.0 bis 1.0
 bombsound.set_volume(0.2)  # Lautstärke Bombe
+game_over_sound.set_volume(0.2) # Lautstärke game over
 
 # Spielerklasse definieren
 class Player:
@@ -398,6 +400,9 @@ def show_game_over_screen():
     screen.blit(instruction_text, instruction_rect)
     screen.blit(score_text, score_rect)
     screen.blit(esc_text, (50, 688))  # Spiel beenden unten links anzeigen
+
+    # Game Over Sound abspielen
+    game_over_sound.play()
 
     pygame.display.flip()
 
