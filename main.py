@@ -65,8 +65,8 @@ BACKGROUND = (244, 164, 96)
 TUERKIS = (0, 197, 205)
 
 # Schriftarten laden
-main_font = pygame.font.Font('fonts/Neonrec.otf',72)
-title_font = pygame.font.SysFont('Impact', 60)
+main_font = pygame.font.Font('fonts/Neonrec.otf',90)
+title_font = pygame.font.SysFont('Impact', 55)
 instruction_font = pygame.font.SysFont('Impact', 36)
 infobar_font = pygame.font.SysFont('Impact', 20)
 
