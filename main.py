@@ -45,16 +45,16 @@ STONE_POSITIONS = [3,4,5,10,16,17,18,22,28,29,
                    186,190,191,196,197,204,
                    213,239,
                    244,246,247,249,250,255,256,259,260,262,266,
-                   271,277,279,287,295,297,
-                   301,304,312,314,316,317,324,
-                   335,339,341,343,349,355,
+                   271,277,279,287,291,295,297,
+                   301,304,312,314,316,317,321,324,327,
+                   335,339,341,343,349,355,357,
                    366,373,377,378,379,382,383,
                    413,
                    428,429,436,439,448,449,
                    451,457,471,
                    481,482,486,487,490,495,496,497,501,502,506,507,508] # = zerstörbares Hindernis
 
-ENEMY_POSITIONS = [131,265,369]
+ENEMY_POSITIONS = [131,265,369,445]
 
 # Farben
 WHITE = (255, 255, 255)
@@ -144,7 +144,6 @@ class Player:
         self.move_down = keys[pygame.K_DOWN] or keys[pygame.K_s]
 
     def move(self, keys, hindernisse):
-        #original_rect = self.rect.copy()
 
         # Bewegung in jede Richtung separat überprüfen
         if (keys[pygame.K_LEFT] or keys[pygame.K_a]):
@@ -282,12 +281,12 @@ class Bomb:
         if current_time - self.time_placed >= BOMB_TIME:
             self.exploded = True
 
-# Liste von Hindernissen erstellen aus Liste GRANIT_POSITIONS
+# Liste von Granits erstellen aus Liste GRANIT_POSITIONS
 granits = []
 for i in range(len(GRANIT_POSITIONS)):
     granits.append(Granit(x_position(GRANIT_POSITIONS[i]), y_position(GRANIT_POSITIONS[i])))
 
-# Liste von Hindernissen erstellen aus Liste STONE_POSITIONS
+# Liste von Stones erstellen aus Liste STONE_POSITIONS
 stones = []
 for i in range(len(STONE_POSITIONS)):
     stones.append(Stone(x_position(STONE_POSITIONS[i]), y_position(STONE_POSITIONS[i])))
@@ -351,7 +350,7 @@ def show_start_screen():
     instruction_text = instruction_font.render("Drücke LEERTASTE, um zu starten", True, TUERKIS)
     instruction_rect = instruction_text.get_rect(center=(GAME_SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50))
 
-    #Spiel Beenden rendern
+    # Spiel Beenden rendern
     esc_text = infobar_font.render("SPIEL BEENDEN: ESC", True, RED)
 
     # Text auf dem Bildschirm zeichnen
